@@ -22,6 +22,8 @@ package com.chillingvan.canvasgl.glcanvas;
 
 import android.opengl.GLES20;
 
+import com.chillingvan.canvasgl.Loggers;
+
 public class GLES20IdImpl implements GLId {
     private final int[] mTempIntArray = new int[1];
 
@@ -29,6 +31,7 @@ public class GLES20IdImpl implements GLId {
     public int generateTexture() {
         GLES20.glGenTextures(1, mTempIntArray, 0);
         GLES20Canvas.checkError();
+        Loggers.d("GLES20IdImpl", String.format("generateTexture: id:%d", mTempIntArray[0]));
         return mTempIntArray[0];
     }
 

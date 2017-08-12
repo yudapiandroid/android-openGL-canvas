@@ -41,6 +41,8 @@ import com.chillingvan.canvasglsample.R;
 public class CompareGLView extends GLView {
 
     private Bitmap baboon;
+    private Bitmap lenna;
+    private Bitmap robot;
 
     public CompareGLView(Context context) {
         super(context);
@@ -55,6 +57,8 @@ public class CompareGLView extends GLView {
         super.init();
 
         baboon = BitmapFactory.decodeResource(getResources(), R.drawable.baboon);
+        lenna = BitmapFactory.decodeResource(getResources(), R.drawable.lenna);
+        robot = BitmapFactory.decodeResource(getResources(), R.drawable.ic_robot);
     }
 
     @Override
@@ -62,28 +66,38 @@ public class CompareGLView extends GLView {
 
 
         CanvasGL.BitmapMatrix matrix = new CanvasGL.BitmapMatrix();
-        matrix.postScale(2.1f, 2.1f);
-        matrix.postRotate(90);
-        matrix.postTranslate(90, 120);
-        matrix.postScale(0.4f, 0.4f, 140, 150);
-        matrix.postRotate(10, 128 , 128);
-        matrix.postTranslate(90, -120);
-        canvas.drawBitmap(baboon, matrix);
+//        matrix.postScale(2.1f, 2.1f);
+//        matrix.postRotate(90);
+//        matrix.postTranslate(90, 120);
+//        matrix.postScale(0.4f, 0.4f, 140, 150);
+//        matrix.postRotate(10, 128 , 128);
+//        matrix.postTranslate(90, -120);
+//        matrix.postRotate(15);
+//        canvas.drawBitmap(baboon, matrix);
 
+//        canvas.translate(30, 30);
+//        canvas.scale(1.2f, 1.2f);
+        canvas.save();
+        canvas.rotate(30, baboon.getWidth()/2, baboon.getHeight()/2);
+//        canvas.drawBitmap(baboon, getWidth()/2 - baboon.getWidth()/2, getHeight()/2 - baboon.getHeight()/2);
+        canvas.drawBitmap(baboon, 0, 0);
+        canvas.restore();
+        canvas.drawBitmap(robot, 100, 0);
+        canvas.drawBitmap(lenna, 0, 200);
 
         GLPaint paint = new GLPaint();
         paint.setColor(Color.parseColor("#88FF0000"));
         paint.setLineWidth(4);
         paint.setStyle(Paint.Style.FILL);
-        canvas.drawRect(360, 0, 380, 40, paint);
+//        canvas.drawRect(360, 0, 380, 40, paint);
 
         GLPaint paint2 = new GLPaint();
         paint2.setColor(Color.parseColor("#8800FF00"));
         paint2.setLineWidth(4);
         paint2.setStyle(Paint.Style.STROKE);
-        canvas.drawRect(360, 40, 380, 80, paint2);
+//        canvas.drawRect(360, 40, 380, 80, paint2);
 
-        canvas.drawLine(360, 80, 360, 120, paint);
+//        canvas.drawLine(360, 80, 360, 120, paint);
 
         // text
         Bitmap textBitmap = Bitmap.createBitmap(180, 100, Bitmap.Config.ARGB_8888);
@@ -95,19 +109,19 @@ public class CompareGLView extends GLView {
         textPaint.setTextSize(40);
         normalCanvas.drawColor(Color.WHITE);
         normalCanvas.drawText(text, 20, 30, textPaint);
-        canvas.drawBitmap(textBitmap, 500, 80);
+//        canvas.drawBitmap(textBitmap, 500, 80);
 
 
         //circle
         GLPaint circlePaint = new GLPaint();
         circlePaint.setColor(Color.parseColor("#88FF0000"));
         circlePaint.setStyle(Paint.Style.FILL);
-        canvas.drawCircle(430, 30, 30, circlePaint);
+//        canvas.drawCircle(430, 30, 30, circlePaint);
 
         GLPaint strokeCirclePaint = new GLPaint();
         strokeCirclePaint.setColor(Color.parseColor("#88FF0000"));
         strokeCirclePaint.setLineWidth(4);
         strokeCirclePaint.setStyle(Paint.Style.STROKE);
-        canvas.drawCircle(490, 30, 30, strokeCirclePaint);
+//        canvas.drawCircle(490, 30, 30, strokeCirclePaint);
     }
 }

@@ -117,6 +117,8 @@ public class GLES20Canvas implements GLCanvas {
 
     // Projection matrix
     private float[] mProjectionMatrix = new float[MATRIX_SIZE];
+    private float[] mViewMatrix = new float[MATRIX_SIZE];
+    private float[] mViewProjectionMatrix = new float[MATRIX_SIZE];
 
     // Screen size for when we aren't bound to a secondBitmap
     private int mScreenWidth;
@@ -152,6 +154,10 @@ public class GLES20Canvas implements GLCanvas {
 
     private OnPreDrawTextureListener onPreDrawTextureListener;
     private OnPreDrawShapeListener onPreDrawShapeListener;
+    public static final float NEAR = 1f;
+    public static final float FAR = 10;
+    public static final float EYEZ = 5;
+    public static final float Z_RATIO = (FAR + NEAR) / 2 / NEAR;
 
     private abstract static class ShaderParameter {
         public int handle;
@@ -320,17 +326,33 @@ public class GLES20Canvas implements GLCanvas {
 
     @Override
     public void setSize(int width, int height) {
+        Loggers.i("GLES20Canvas", String.format("setSize: w:%d, h:%d", width, height));
         mWidth = width;
         mHeight = height;
         GLES20.glViewport(0, 0, mWidth, mHeight);
         checkError();
         Matrix.setIdentityM(mMatrices, mCurrentMatrixIndex);
-        Matrix.orthoM(mProjectionMatrix, 0, 0, width, 0, height, -1, 1);
+//        Matrix.orthoM(mProjectionMatrix, 0, 0, width, 0, height, -1, 1);
+        float ratio = (float) width / height;
+        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, NEAR, FAR);
+        printMatrix("ProjectionMatrix matrix:", mProjectionMatrix, 0);
+        Matrix.setLookAtM(mViewMatrix, 0,
+                0, 0, EYEZ,
+                0, 0, 0,
+                0, 1, 0);
+        printMatrix("ViewMatrix matrix:", mViewMatrix, 0);
+
+        Matrix.multiplyMM(mViewProjectionMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
+        printMatrix("mViewProjectionMatrix matrix:", mViewProjectionMatrix, 0);
+
         if (getTargetTexture() == null) {
             mScreenWidth = width;
             mScreenHeight = height;
-            Matrix.translateM(mMatrices, mCurrentMatrixIndex, 0, height, 0);
+            Matrix.translateM(mMatrices, mCurrentMatrixIndex, -ratio * Z_RATIO, Z_RATIO, -Z_RATIO + EYEZ);
+            printMatrix("model matrix -3:", mMatrices, 0);
+            Loggers.i("GLES20Canvas", String.format("setSize: ratio:%f, z_ratio:%f", ratio, Z_RATIO));
             Matrix.scaleM(mMatrices, mCurrentMatrixIndex, 1, -1, 1);
+            printMatrix("model matrix -2:", mMatrices, 0);
         }
     }
 
@@ -388,12 +410,13 @@ public class GLES20Canvas implements GLCanvas {
     // (3) we unroll the loop
     @Override
     public void translate(float x, float y) {
+        float ratio = (float) mScreenWidth / mScreenHeight;
         int index = mCurrentMatrixIndex;
         float[] m = mMatrices;
-        m[index + 12] += m[index + 0] * x + m[index + 4] * y;
-        m[index + 13] += m[index + 1] * x + m[index + 5] * y;
-        m[index + 14] += m[index + 2] * x + m[index + 6] * y;
-        m[index + 15] += m[index + 3] * x + m[index + 7] * y;
+        m[index + 12] += m[index + 0] * 2 * x/mScreenWidth * Z_RATIO * ratio + m[index + 4] * 2 * y/mScreenHeight * Z_RATIO;
+        m[index + 13] += m[index + 1] * 2 * x/mScreenWidth * Z_RATIO * ratio + m[index + 5] * 2 * y/mScreenHeight * Z_RATIO;
+        m[index + 14] += m[index + 2] * 2 * x/mScreenWidth * Z_RATIO * ratio + m[index + 6] * 2 * y/mScreenHeight * Z_RATIO;
+        m[index + 15] += m[index + 3] * 2 * x/mScreenWidth * Z_RATIO * ratio + m[index + 7] * 2 * y/mScreenHeight * Z_RATIO;
     }
 
     @Override
@@ -406,12 +429,16 @@ public class GLES20Canvas implements GLCanvas {
         if (angle == 0f) {
             return;
         }
-        float[] temp = mTempMatrix;
-        Matrix.setRotateM(temp, 0, angle, x, y, z);
-        float[] matrix = mMatrices;
-        int index = mCurrentMatrixIndex;
-        Matrix.multiplyMM(temp, MATRIX_SIZE, matrix, index, temp, 0);
-        System.arraycopy(temp, MATRIX_SIZE, matrix, index, MATRIX_SIZE);
+        float ratio = (float) mScreenWidth / mScreenHeight;
+        Matrix.rotateM(mMatrices, mCurrentMatrixIndex, angle, x, y, z);
+//        float[] temp = mTempMatrix;
+//        Matrix.setRotateM(temp, 0, angle, x, y, z);
+//        Matrix.setRotateM(temp, 0, angle, 2 * x/mScreenWidth * Z_RATIO * ratio - ratio * Z_RATIO,
+//                2 * y/mScreenHeight * Z_RATIO + Z_RATIO, z -Z_RATIO + EYEZ);
+//        float[] matrix = mMatrices;
+//        int index = mCurrentMatrixIndex;
+//        Matrix.multiplyMM(temp, MATRIX_SIZE, matrix, index, temp, 0);
+//        System.arraycopy(temp, MATRIX_SIZE, matrix, index, MATRIX_SIZE);
     }
 
 
@@ -562,10 +589,16 @@ public class GLES20Canvas implements GLCanvas {
     }
 
     private void setMatrix(ShaderParameter[] params, float x, float y, float width, float height) {
-        Matrix.translateM(mTempMatrix, 0, mMatrices, mCurrentMatrixIndex, x, y, 0f);
-        Matrix.scaleM(mTempMatrix, 0, width, height, 1f);
-//        printMatrix("translate matrix:", mTempMatrix, 0);
-        Matrix.multiplyMM(mTempMatrix, MATRIX_SIZE, mProjectionMatrix, 0, mTempMatrix, 0);
+        Loggers.i("GLES20Canvas", String.format("setMatrix: %.2f, %.2f, %.2f, %.2f", x, y, width, height));
+        float ratio = (float) mScreenWidth / mScreenHeight;
+        Matrix.translateM(mTempMatrix, 0, mMatrices, mCurrentMatrixIndex,
+                2 * x/mScreenWidth * Z_RATIO * ratio, 2 * y/mScreenHeight * Z_RATIO, 0);
+        printMatrix("model matrix -1:", mTempMatrix, 0);
+        Matrix.scaleM(mTempMatrix, 0,  width/mScreenWidth * Z_RATIO * 2 * ratio,  height/mScreenHeight * Z_RATIO * 2, 1);
+        printMatrix("model matrix:", mTempMatrix, 0);
+//        Matrix.multiplyMM(mTempMatrix, MATRIX_SIZE, mProjectionMatrix, 0, mTempMatrix, 0);
+        Matrix.multiplyMM(mTempMatrix, MATRIX_SIZE, mViewProjectionMatrix, 0, mTempMatrix, 0);
+        printMatrix("ultra matrix:", mTempMatrix, MATRIX_SIZE);
         GLES20.glUniformMatrix4fv(params[INDEX_MATRIX].handle, 1, false, mTempMatrix, MATRIX_SIZE);
         checkError();
     }
@@ -987,13 +1020,16 @@ public class GLES20Canvas implements GLCanvas {
 
     @SuppressWarnings("unused")
     public static void printMatrix(String message, float[] m, int offset) {
+        if (!Loggers.DEBUG) {
+            return;
+        }
         StringBuilder b = new StringBuilder(message);
         for (int i = 0; i < MATRIX_SIZE; i++) {
             b.append(' ');
             if (i % 4 == 0) {
                 b.append('\n');
             }
-            b.append(m[offset + i]);
+            b.append(String.format("%.5ff, ", m[offset + i]));
         }
         Loggers.v(TAG, b.toString());
     }
