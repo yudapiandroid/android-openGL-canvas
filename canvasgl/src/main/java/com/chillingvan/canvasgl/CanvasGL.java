@@ -277,7 +277,7 @@ public class CanvasGL implements ICanvasGL {
 
     @Override
     public void rotate(float degrees) {
-        glCanvas.rotate(degrees, 1, 0, 0);
+        glCanvas.rotate(degrees, 0, 0, 1);
     }
 
     @Override

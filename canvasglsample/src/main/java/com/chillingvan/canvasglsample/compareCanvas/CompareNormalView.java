@@ -74,7 +74,7 @@ public class CompareNormalView extends View {
 //        matrix.postScale(0.4f, 0.4f, 139, 149);
 //        matrix.postRotate(10, 128 , 128);
 //        matrix.postTranslate(90, -120);
-        matrix.postRotate(30);
+//        matrix.postRotate(30);
         canvas.drawBitmap(baboon, matrix, new Paint());
 
 

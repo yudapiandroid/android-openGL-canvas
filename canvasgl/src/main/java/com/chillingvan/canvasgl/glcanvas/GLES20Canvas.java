@@ -329,7 +329,6 @@ public class GLES20Canvas implements GLCanvas {
         Loggers.i("GLES20Canvas", String.format("setSize: w:%d, h:%d", width, height));
         mWidth = width;
         mHeight = height;
-        GLES20.glViewport(0, 0, mWidth, mHeight);
         checkError();
         Matrix.setIdentityM(mMatrices, mCurrentMatrixIndex);
 //        Matrix.orthoM(mProjectionMatrix, 0, 0, width, 0, height, -1, 1);
@@ -348,9 +347,6 @@ public class GLES20Canvas implements GLCanvas {
         if (getTargetTexture() == null) {
             mScreenWidth = width;
             mScreenHeight = height;
-            Matrix.translateM(mMatrices, mCurrentMatrixIndex, -ratio * Z_RATIO, Z_RATIO, -Z_RATIO + EYEZ);
-            printMatrix("model matrix -3:", mMatrices, 0);
-            Loggers.i("GLES20Canvas", String.format("setSize: ratio:%f, z_ratio:%f", ratio, Z_RATIO));
             Matrix.scaleM(mMatrices, mCurrentMatrixIndex, 1, -1, 1);
             printMatrix("model matrix -2:", mMatrices, 0);
         }
@@ -413,10 +409,10 @@ public class GLES20Canvas implements GLCanvas {
         float ratio = (float) mScreenWidth / mScreenHeight;
         int index = mCurrentMatrixIndex;
         float[] m = mMatrices;
-        m[index + 12] += m[index + 0] * 2 * x/mScreenWidth * Z_RATIO * ratio + m[index + 4] * 2 * y/mScreenHeight * Z_RATIO;
-        m[index + 13] += m[index + 1] * 2 * x/mScreenWidth * Z_RATIO * ratio + m[index + 5] * 2 * y/mScreenHeight * Z_RATIO;
-        m[index + 14] += m[index + 2] * 2 * x/mScreenWidth * Z_RATIO * ratio + m[index + 6] * 2 * y/mScreenHeight * Z_RATIO;
-        m[index + 15] += m[index + 3] * 2 * x/mScreenWidth * Z_RATIO * ratio + m[index + 7] * 2 * y/mScreenHeight * Z_RATIO;
+        m[index + 12] += m[index + 0] *  x/mScreenWidth * Z_RATIO * ratio + m[index + 4] *  y/mScreenHeight * Z_RATIO;
+        m[index + 13] += m[index + 1] *  x/mScreenWidth * Z_RATIO * ratio + m[index + 5] *  y/mScreenHeight * Z_RATIO;
+        m[index + 14] += m[index + 2] *  x/mScreenWidth * Z_RATIO * ratio + m[index + 6] *  y/mScreenHeight * Z_RATIO;
+        m[index + 15] += m[index + 3] *  x/mScreenWidth * Z_RATIO * ratio + m[index + 7] *  y/mScreenHeight * Z_RATIO;
     }
 
     @Override
@@ -429,16 +425,7 @@ public class GLES20Canvas implements GLCanvas {
         if (angle == 0f) {
             return;
         }
-        float ratio = (float) mScreenWidth / mScreenHeight;
         Matrix.rotateM(mMatrices, mCurrentMatrixIndex, angle, x, y, z);
-//        float[] temp = mTempMatrix;
-//        Matrix.setRotateM(temp, 0, angle, x, y, z);
-//        Matrix.setRotateM(temp, 0, angle, 2 * x/mScreenWidth * Z_RATIO * ratio - ratio * Z_RATIO,
-//                2 * y/mScreenHeight * Z_RATIO + Z_RATIO, z -Z_RATIO + EYEZ);
-//        float[] matrix = mMatrices;
-//        int index = mCurrentMatrixIndex;
-//        Matrix.multiplyMM(temp, MATRIX_SIZE, matrix, index, temp, 0);
-//        System.arraycopy(temp, MATRIX_SIZE, matrix, index, MATRIX_SIZE);
     }
 
 
@@ -589,14 +576,20 @@ public class GLES20Canvas implements GLCanvas {
     }
 
     private void setMatrix(ShaderParameter[] params, float x, float y, float width, float height) {
-        Loggers.i("GLES20Canvas", String.format("setMatrix: %.2f, %.2f, %.2f, %.2f", x, y, width, height));
+        int viewportX = (int) (width / 2 - mScreenWidth + x);
+        int viewportY = (int) (-height / 2 - y);
+        GLES20.glViewport(viewportX, viewportY, 2 * mScreenWidth, 2 * mScreenHeight);
+
         float ratio = (float) mScreenWidth / mScreenHeight;
+        float realW = width / mScreenWidth * Z_RATIO * 2 * ratio / 2;
+        float realH = height / mScreenHeight * Z_RATIO * 2 / 2;
         Matrix.translateM(mTempMatrix, 0, mMatrices, mCurrentMatrixIndex,
-                2 * x/mScreenWidth * Z_RATIO * ratio, 2 * y/mScreenHeight * Z_RATIO, 0);
+                -realW/2, -realH/2, -Z_RATIO + EYEZ);
         printMatrix("model matrix -1:", mTempMatrix, 0);
-        Matrix.scaleM(mTempMatrix, 0,  width/mScreenWidth * Z_RATIO * 2 * ratio,  height/mScreenHeight * Z_RATIO * 2, 1);
+
+        Matrix.scaleM(mTempMatrix, 0, realW, realH, 1);
         printMatrix("model matrix:", mTempMatrix, 0);
-//        Matrix.multiplyMM(mTempMatrix, MATRIX_SIZE, mProjectionMatrix, 0, mTempMatrix, 0);
+
         Matrix.multiplyMM(mTempMatrix, MATRIX_SIZE, mViewProjectionMatrix, 0, mTempMatrix, 0);
         printMatrix("ultra matrix:", mTempMatrix, MATRIX_SIZE);
         GLES20.glUniformMatrix4fv(params[INDEX_MATRIX].handle, 1, false, mTempMatrix, MATRIX_SIZE);

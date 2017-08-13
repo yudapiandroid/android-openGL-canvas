@@ -78,12 +78,14 @@ public class CompareGLView extends GLView {
 //        canvas.translate(30, 30);
 //        canvas.scale(1.2f, 1.2f);
         canvas.save();
-        canvas.rotate(30, baboon.getWidth()/2, baboon.getHeight()/2);
-//        canvas.drawBitmap(baboon, getWidth()/2 - baboon.getWidth()/2, getHeight()/2 - baboon.getHeight()/2);
-        canvas.drawBitmap(baboon, 0, 0);
+//        canvas.rotate(30, baboon.getWidth()/2, baboon.getHeight()/2);
+        canvas.rotate(30);
+        canvas.translate(220, 140);
+        canvas.drawBitmap(baboon, getWidth()/2 - baboon.getWidth()/2, getHeight()/2 - baboon.getHeight()/2);
+//        canvas.drawBitmap(baboon, 20, 30);
         canvas.restore();
-        canvas.drawBitmap(robot, 100, 0);
-        canvas.drawBitmap(lenna, 0, 200);
+//        canvas.drawBitmap(robot, 100, 0);
+//        canvas.drawBitmap(lenna, 0, 200);
 
         GLPaint paint = new GLPaint();
         paint.setColor(Color.parseColor("#88FF0000"));
