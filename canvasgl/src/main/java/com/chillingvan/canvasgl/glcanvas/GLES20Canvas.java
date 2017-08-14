@@ -385,7 +385,7 @@ public class GLES20Canvas implements GLCanvas {
 
     @Override
     public void translate(float x, float y, float z) {
-        Matrix.translateM(mMatrices, mCurrentMatrixIndex, x, y, z);
+        Matrix.translateM(mMatrices, mCurrentMatrixIndex, x, y, z - Z_RATIO + EYEZ);
     }
 
 

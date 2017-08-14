@@ -281,6 +281,20 @@ public class CanvasGL implements ICanvasGL {
     }
 
     @Override
+    public void rotateX(float degree, float y, float z) {
+        glCanvas.translate(0, y, z);
+        glCanvas.rotate(degree, 1, 0, 0);
+        glCanvas.translate(0, -y, -z);
+    }
+
+    @Override
+    public void rotateY(float degree, float x, float z) {
+        glCanvas.translate(0, x, z);
+        glCanvas.rotate(degree, 0, 1, 0);
+        glCanvas.translate(0, -x, -z);
+    }
+
+    @Override
     public void rotate(float degrees, float px, float py) {
         glCanvas.translate(px, py);
         rotate(degrees);

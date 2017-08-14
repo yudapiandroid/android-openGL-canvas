@@ -92,6 +92,8 @@ public interface ICanvasGL {
 
 
     void rotate(float degrees);
+    void rotateX(float degrees, float y, float z);
+    void rotateY(float degree, float x, float z);
 
     void rotate(float degrees, float px, float py);
 
