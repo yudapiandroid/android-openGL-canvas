@@ -27,9 +27,7 @@ Compare to GPUImage:
 ## Requirements
 * Android API 14 or higher (OpenGL ES 2.0)
 
-## Usage
-
-### Gradle dependency
+## Usag
 
 sample:
 ```groovy
@@ -77,7 +75,7 @@ public class MyGLView extends GLView {
 
 * Using canvas to draw
 ```java
-        canvas.drawBitmap(textBitmap, left, top);
+     tBitmap, left, top);
         
         // transform
         canvas.save();
